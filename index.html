@@ -335,7 +335,7 @@ const UNWANTED = new Set(["ngo","seo","pdf","wiki","domain","news","tv",
 
 const DOM_UNWANTED = new Set(["google","livejournal","tripod","tripadvisor"]);
 
-const EXCL_TLDS = new Set([".org",".edu",".gov",".pk",".jp",".bd",".lk",".app",".xyz"]);
+const EXCL_TLDS = new Set([".org",".edu",".gov",".pk",".jp",".bd",".lk",".app",".xyz",".uk",".in",".ph",".vn",".vegas"]);
 
 const RE_VALID  = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 const RE_PERSON = /^[a-z]([a-z._\-]*[a-z])?$/;
@@ -372,10 +372,28 @@ function hasUnwanted(e) {
   return false;
 }
 
+/* hasExcludedTldInLocal — catches emails like linkranker.org@gmail.com
+   where the excluded TLD (.org, .edu etc.) sits in the LOCAL part before @.
+   Splits the local part on dots and checks each ".segment" against EXCL_TLDS.
+   Examples:
+     linkranker.org@gmail.com   → local="linkranker.org" → ".org" → blocked
+     horrorscreams.org@gmail.com→ local has ".org"       → blocked
+     onlinecasinoz.org@gmail.com→ local has ".org"       → blocked
+     john.smith@gmail.com       → local has ".smith" → no match → passes
+     tram.organicmart@gmail.com → no excluded segment   → passes  */
+function hasExcludedTldInLocal(e) {
+  if (!e.includes("@")) return false;
+  const loc = e.split("@")[0];
+  const segs = new Set(loc.split(".").filter(Boolean).map(p => "." + p));
+  for (const t of EXCL_TLDS) if (segs.has(t)) return true;
+  return false;
+}
+
 function filterEmail(e) {
-  if (!RE_VALID.test(e))   return false;
-  if (hasExcludedTld(e))   return false;
-  if (hasUnwanted(e))      return false;
+  if (!RE_VALID.test(e))          return false;
+  if (hasExcludedTld(e))          return false;
+  if (hasExcludedTldInLocal(e))   return false;
+  if (hasUnwanted(e))             return false;
   return true;
 }
 
