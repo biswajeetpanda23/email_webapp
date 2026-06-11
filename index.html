@@ -326,7 +326,7 @@ const BIZ_RANK = ["ceo","founder","owner","director","hr","career","careers",
 
 const GENERIC = new Set(["info","contact","support","admin","team","office",
   "hello","sales","marketing","service","help",
-  "webmaster","postmaster","mailer-daemon","test"]);
+  "postmaster","mailer-daemon","test"]);
 
 const UNWANTED = new Set(["ngo","seo","pdf","wiki","domain","news","tv",
   "movie","magazine","press","donate","trust","abuse","private","privacy",
@@ -362,13 +362,31 @@ function hasExcludedTld(e) {
   return false;
 }
 
+/* PREFIX_BLOCK — blocks emails where local part STARTS WITH these keywords.
+   Catches noreply1, noreplyXYZ, donotreply123 which don't split into clean tokens. */
+const PREFIX_BLOCK = [
+  "noreply", "no-reply", "donotreply", "do-not-reply",
+  "mailer-daemon", "mailerdaemon", "postmaster",
+  "bounces", "bounce", "unsubscribe"
+];
+
 function hasUnwanted(e) {
   if (!e.includes("@")) return false;
   const [loc, dom] = e.split("@");
+
+  // 1. Exact whole-token match in local part
   const lt = new Set(loc.split(/[.\-_]/));
   for (const k of UNWANTED) if (lt.has(k)) return true;
+
+  // 2. Prefix match — blocks noreply1, noreplyeapappointments, donotreply123 etc.
+  for (const prefix of PREFIX_BLOCK) {
+    if (loc.startsWith(prefix)) return true;
+  }
+
+  // 3. Domain token match
   const dt = new Set(dom.split(/[.\-_]/));
   for (const k of DOM_UNWANTED) if (dt.has(k)) return true;
+
   return false;
 }
 
