@@ -258,11 +258,12 @@
   <!-- Results card -->
   <div class="card" id="resultsCard" style="display:none">
 
-    <div class="stats-grid">
-      <div class="stat"><div class="stat-label">Rows</div><div class="stat-val blue" id="sRows">0</div></div>
+    <div class="stats-grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+      <div class="stat"><div class="stat-label">Rows total</div><div class="stat-val blue" id="sRows">0</div></div>
+      <div class="stat"><div class="stat-label">Domains skipped</div><div class="stat-val red" id="sSkipped">0</div></div>
       <div class="stat"><div class="stat-label">Valid emails</div><div class="stat-val green" id="sValid">0</div></div>
-      <div class="stat"><div class="stat-label">Filtered out</div><div class="stat-val red" id="sFiltered">0</div></div>
-      <div class="stat"><div class="stat-label">With output</div><div class="stat-val amber" id="sOutput">0</div></div>
+      <div class="stat"><div class="stat-label">Emails filtered</div><div class="stat-val red" id="sFiltered">0</div></div>
+      <div class="stat"><div class="stat-label">Rows with output</div><div class="stat-val amber" id="sOutput">0</div></div>
     </div>
 
     <div class="section-label">Preview (first 50 rows)</div>
@@ -301,9 +302,9 @@
       <div class="rule-group">
         <h4>Blocked automatically</h4>
         <ul>
-          <li>TLDs: .org .edu .gov .pk .jp .bd .lk .app .xyz</li>
-          <li>Multi-level: gwct.org.uk blocked via .org segment</li>
-          <li>Keywords: noreply, test, fake, seo, ngo, press…</li>
+          <li><strong>Domain column:</strong> entire row skipped if domain has .org .edu .gov .pk .jp .bd .lk .app .xyz</li>
+          <li>Multi-level domains: gwct.org.uk skipped via .org segment</li>
+          <li>Email keywords: noreply, test, fake, seo, ngo, press…</li>
           <li>Platforms: google, livejournal, tripod, tripadvisor</li>
           <li>Wrong-domain business emails (e.g. mspence@janklow.com for eugenelim.com)</li>
         </ul>
@@ -341,6 +342,19 @@ const RE_PERSON = /^[a-z]([a-z._\-]*[a-z])?$/;
 
 const local  = e => e.split("@")[0];
 const domain = e => { const p = e.split("@"); return p.length === 2 ? p[1] : ""; };
+
+/* isDomainExcluded — checks the row domain column itself (not just email TLDs).
+   Splits on dots and checks every segment against EXCL_TLDS.
+   e.g. "gwct.org.uk" has ".org" segment → whole row skipped.
+   e.g. "university.edu" has ".edu" → skipped.
+   e.g. "stripe.com" → no match → processed normally. */
+function isDomainExcluded(rowDomain) {
+  const d = rowDomain.toLowerCase().trim();
+  if (!d) return false;
+  const segs = new Set(d.split(".").filter(Boolean).map(p => "." + p));
+  for (const t of EXCL_TLDS) if (segs.has(t)) return true;
+  return false;
+}
 
 function hasExcludedTld(e) {
   const segs = new Set(domain(e).split(".").filter(Boolean).map(p => "." + p));
@@ -561,13 +575,20 @@ runBtn.addEventListener("click", async () => {
 
   const dataRows = parsed.slice(1).filter(r => r.some(c => c && c.trim()));
 
-  let totalValid = 0, totalFiltered = 0, outputRows = 0;
+  let totalValid = 0, totalFiltered = 0, outputRows = 0, skippedDomains = 0;
   const results = [];
 
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
     const rowDomain = (row[dIdx] || "").trim();
     const rawEmail  = row[eIdx]  || "";
+
+    /* Skip entire row if the domain itself has an excluded TLD (.org, .edu, .gov etc.) */
+    if (isDomainExcluded(rowDomain)) {
+      skippedDomains++;
+      continue;
+    }
+
     const { selected, validCount, filteredCount } = processRow(rawEmail, rowDomain);
 
     totalValid    += validCount;
@@ -594,6 +615,7 @@ runBtn.addEventListener("click", async () => {
   document.getElementById("sValid").textContent   = totalValid.toLocaleString();
   document.getElementById("sFiltered").textContent= totalFiltered.toLocaleString();
   document.getElementById("sOutput").textContent  = outputRows.toLocaleString();
+  document.getElementById("sSkipped").textContent = skippedDomains.toLocaleString();
 
   previewBody.innerHTML = "";
   const preview = results.slice(0, 50);
