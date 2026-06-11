@@ -367,14 +367,25 @@ function hasExcludedTld(e) {
 const PREFIX_BLOCK = [
   "noreply", "no-reply", "donotreply", "do-not-reply",
   "mailer-daemon", "mailerdaemon", "postmaster",
-  "bounces", "bounce", "unsubscribe"
+  "bounces", "bounce", "unsubscribe","news","movie"
+];
+
+/* CONTAINS_BLOCK — blocks emails where local part CONTAINS these keywords
+   ANYWHERE (start, middle, or end).
+   e.g. holtonrecordernews, iraenewsletter, koropaknews, hotnews, infonews
+   All contain "news" somewhere → all blocked.
+   Uses word-boundary-aware check: looks for the keyword within the string
+   so andrew.newsham → "newsham" contains "news" → blocked.
+   If you want a name like "andrew.newsham" to pass, remove "news" from here. */
+const CONTAINS_BLOCK = [
+  "news", "newsletter"
 ];
 
 function hasUnwanted(e) {
   if (!e.includes("@")) return false;
   const [loc, dom] = e.split("@");
 
-  // 1. Exact whole-token match in local part
+  // 1. Exact whole-token match in local part (split on separators)
   const lt = new Set(loc.split(/[.\-_]/));
   for (const k of UNWANTED) if (lt.has(k)) return true;
 
@@ -383,7 +394,13 @@ function hasUnwanted(e) {
     if (loc.startsWith(prefix)) return true;
   }
 
-  // 3. Domain token match
+  // 3. Contains match — blocks anything with "news" anywhere in local part
+  //    e.g. holtonrecordernews, iraenewsletter, koropaknews, hotnews, vistanewshub
+  for (const kw of CONTAINS_BLOCK) {
+    if (loc.includes(kw)) return true;
+  }
+
+  // 4. Domain token match
   const dt = new Set(dom.split(/[.\-_]/));
   for (const k of DOM_UNWANTED) if (dt.has(k)) return true;
 
