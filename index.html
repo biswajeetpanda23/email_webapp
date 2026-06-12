@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Email Filter — Lead Cleaner</title>
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -212,6 +213,53 @@
   @media (max-width: 600px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .rules { grid-template-columns: 1fr; }
+
+    /* ── Branded header ── */
+  .header-icon {
+    background: linear-gradient(135deg, #185FA5 0%, #00AD9F 100%);
+    box-shadow: 0 2px 8px rgba(24,95,165,0.25);
+    font-size: 22px;
+  }
+  .header h1 {
+    background: linear-gradient(135deg, #185FA5 0%, #00AD9F 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    background: var(--green-bg); color: var(--green-txt);
+    margin-left: 8px; vertical-align: middle;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+  .footer-brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .footer-brand .logo {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, #185FA5 0%, #00AD9F 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 13px; font-weight: 700;
+  }
+  .footer-copyright {
+    font-size: 12px; color: var(--text2);
+  }
+  .footer-copyright a {
+    color: var(--blue); text-decoration: none; font-weight: 600;
+  }
+  .footer-copyright a:hover { text-decoration: underline; }
   }
 </style>
 </head>
@@ -219,10 +267,11 @@
 <div class="container">
 
   <!-- Header -->
+  <!-- Header -->
   <div class="header">
     <div class="header-icon">📧</div>
     <div>
-      <h1>Email Filter &mdash; Lead Cleaner</h1>
+      <h1>Email Filter &mdash; Lead Cleaner <span class="header-badge">⚡ v2.0</span></h1>
       <p>Drop a CSV, get clean prioritised leads. Runs entirely in your browser &mdash; no upload, no server.</p>
     </div>
   </div>
@@ -311,7 +360,16 @@
       </div>
     </div>
   </div>
-
+<!-- Footer -->
+  <div class="footer">
+    <div class="footer-brand">
+      <span class="logo">B</span>
+      <span>Email Filter &mdash; Lead Cleaner</span>
+    </div>
+    <div class="footer-copyright">
+      © 2026 &mdash; Made with ❤️ by <a href="#" target="_blank">Biswajeet</a>. All rights reserved.
+    </div>
+  </div>
 </div>
 
 <script>
