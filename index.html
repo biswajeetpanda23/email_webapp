@@ -367,7 +367,7 @@ function hasExcludedTld(e) {
 const PREFIX_BLOCK = [
   "noreply", "no-reply", "donotreply", "do-not-reply",
   "mailer-daemon", "mailerdaemon", "postmaster",
-  "bounces", "bounce", "unsubscribe","news","movie"
+  "bounces", "bounce", "unsubscribe"
 ];
 
 /* CONTAINS_BLOCK — blocks emails where local part CONTAINS these keywords
@@ -378,8 +378,13 @@ const PREFIX_BLOCK = [
    so andrew.newsham → "newsham" contains "news" → blocked.
    If you want a name like "andrew.newsham" to pass, remove "news" from here. */
 const CONTAINS_BLOCK = [
-  "news", "newsletter"
+  "news", "newsletter", "seo"
 ];
+// NOTE: "seo" also matches words containing those letters as a substring:
+//   houseof... (h-o-u-SEO-f), purchaseorders (purcha-SEO-rders),
+//   roseopalshop (ro-SEO-palshop), Seoul / Seo / Seow names.
+// If you need to whitelist a specific real name or brand later,
+// add an EXCEPTION list and check it before this CONTAINS_BLOCK loop.
 
 function hasUnwanted(e) {
   if (!e.includes("@")) return false;
